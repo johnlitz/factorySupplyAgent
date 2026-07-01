@@ -1,0 +1,76 @@
+# cotton.yaml — quality metrics, tiers, authenticity rules, and spec vocabulary
+# for cotton garments (knits/tees and woven shirting). See knowledge/quality-rubric.md
+# for citations. Staple length is the dominant fiber-quality lever for cotton.
+
+material: cotton
+also_known_as_zh: 棉                 # 棉 = cotton; 纯棉 = 100% cotton; 长绒棉 = long-staple cotton
+
+# ---------------------------------------------------------------------------
+# AXIS: fiber_quality  (staple length dominates; longer = stronger, softer, less pill)
+# ---------------------------------------------------------------------------
+fiber_quality:
+  staple_length:
+    zh_terms: [长绒棉, 超长绒棉]        # 长绒棉 long-staple, 超长绒棉 extra-long-staple (ELS)
+    bands:
+      - {grade: ELS_top,  min_mm: 40.0, score: 100, note: "Top Giza (e.g. Giza 45), Sea Island. Rare."}
+      - {grade: ELS,      min_mm: 34.9, score: 90,  note: "Industry ELS floor = 1-3/8in. Pima/Supima ~35mm, Egyptian Giza."}
+      - {grade: long,     min_mm: 28.6, score: 65,  note: "Long-staple."}
+      - {grade: upland,   min_mm: 25.4, score: 45,  note: "Commodity Upland ~26-27mm; ~90% of world crop."}
+      - {grade: short,    min_mm: 0,    score: 25}
+    caveat: "USDA calls >1.25in (31.75mm) 'extra-long'; industry/trade uses 1.375in (34.9mm). Use 34.9mm as the defensible ELS floor."
+  named_types:                         # provenance shortcuts, with verifiability note
+    - {name: supima,   score: 95, verifiable: true,  note: "Trademarked American Pima ELS (~35mm); licensed & traceable supply chain -> a Supima claim is checkable."}
+    - {name: egyptian_giza, score: 90, verifiable: false, note: "Prized Giza 45/87 are ELS, but 'Egyptian cotton' is UNREGULATED; ~89% of goods sold as such tested non-compliant. Prefer Supima."}
+    - {name: pima,     score: 88, verifiable: false}
+    - {name: unspecified_100pct, score: 50}
+
+# ---------------------------------------------------------------------------
+# AXIS: construction  (yarn finishing + fabric spec)
+# ---------------------------------------------------------------------------
+construction:
+  combed_vs_carded:
+    zh_terms: [精梳, 普梳]              # 精梳 = combed (premium), 普梳 = carded
+    note: "Combing removes ~15-20% short fibers (noil) -> smoother, stronger, less pilling; ~15-25% pricier. 精梳 = quality signal."
+  mercerized:
+    zh_terms: [丝光]                   # 丝光棉 = mercerized cotton
+    note: "NaOH finish: adds sheen, +20-25% tensile strength, +~25% dye uptake (deeper, fade-resistant color). A real value-add."
+  thread_count:                        # WOVEN goods (shirting/sheets) only
+    zh_terms: [支数, 纱支]             # yarn count also written 支数; distinct from woven TC
+    note: "Warp+weft per sq inch. 200-400 is the honest sweet spot; single-ply tops out ~400-450. Claims of 800-1500+ are inflated multi-ply counting -> weak/negative signal."
+    bands:
+      - {range: "200-400", score: 90, note: "Quality single-ply range (percale 200-400, sateen 300-600)."}
+      - {range: "<200",    score: 55}
+      - {range: ">450",    score: 40, note: "Treat as inflated unless single-ply verified."}
+  gsm_knits:                           # tees / knitwear weight
+    zh_terms: [克重]
+    bands:
+      - {name: heavyweight, gsm: "180-240+", score: 90, note: "Structured, durable, premium/streetwear."}
+      - {name: midweight,   gsm: "150-180",  score: 75, note: "Most versatile, year-round."}
+      - {name: lightweight, gsm: "100-150",  score: 55, note: "Breathable summer basics."}
+    caveat: "Category edges are soft (+/-20-30 GSM across sources)."
+
+# ---------------------------------------------------------------------------
+# AUTHENTICITY GATE rules
+# ---------------------------------------------------------------------------
+authenticity:
+  hard_fail:
+    - id: blend_sold_as_pure
+      rule: "Title claims 纯棉 (100% cotton) but composition shows polyester/spandex above trace."
+  suspect:
+    - id: unverifiable_egyptian
+      rule: "'Egyptian cotton' claim with no trademark/traceability (label is unregulated; ~89% mislabeled)."
+    - id: inflated_thread_count
+      rule: "Thread count > ~450 advertised without single-ply confirmation."
+    - id: no_specs
+      rule: "No staple type, GSM, or combed/carded stated."
+
+# ---------------------------------------------------------------------------
+# SPEC VOCABULARY the agent extracts (drives spec_transparency)
+# ---------------------------------------------------------------------------
+listing_specs:
+  fiber_pct:        {zh: [成分, 含棉量], required: true}
+  staple_type:      {zh: [长绒棉, 超长绒棉], required: false}
+  combed_or_carded: {zh: [精梳, 普梳], required: false}
+  mercerized:       {zh: [丝光], required: false}
+  gsm:              {zh: [克重], required: true}
+  thread_count:     {zh: [支数, 纱支], required: false, applies_to: woven}

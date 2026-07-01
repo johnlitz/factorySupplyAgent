@@ -1,0 +1,113 @@
+# cashmere.yaml — quality metrics, tiers, authenticity rules, and spec vocabulary
+# for cashmere knitwear. Consumed by the agent alongside data/quality-model.yaml.
+# Numbers are cross-checked across multiple sources; see knowledge/quality-rubric.md
+# for citations and caveats. Where standards disagree, the conservative value is used.
+
+material: cashmere
+also_known_as_zh: 羊绒            # "yang rong" = cashmere / goat down
+
+# ---------------------------------------------------------------------------
+# WHAT LEGALLY COUNTS AS CASHMERE (CCMI / US FTC 16 CFR / SFA — highest confidence)
+# ---------------------------------------------------------------------------
+definition:
+  mean_fiber_diameter_um_max: 19      # mean diameter must be <= 19 microns
+  coefficient_of_variation_max_pct: 24
+  coarse_fiber_over_30um_max_pct: 3   # <=3% by weight may exceed 30 microns
+  notes: >
+    These are the definitional limits for the fiber to be called "cashmere" at all.
+    Quality grading (A/B/C below) sits ON TOP of this and is informal industry
+    convention, not law. China's GB/T 18132 and GB 18267-2013 are the relevant
+    Chinese standards; first-grade fiber cited at ~15.5-16.5 um.
+
+# ---------------------------------------------------------------------------
+# AXIS: fiber_quality  (micron + staple length are the two dominant metrics)
+# ---------------------------------------------------------------------------
+fiber_quality:
+  micron:                              # mean fiber diameter, lower = finer/softer
+    zh_terms: []                       # rarely printed by micron; inferred from grade/origin
+    bands:
+      - {grade: baby,    max_um: 14.0, score: 100, note: "Kid goats <1yr, ~13.5um avg. Loro-tier. Separate category."}
+      - {grade: A_ultra, max_um: 15.5, score: 92}
+      - {grade: A,       max_um: 16.0, score: 85}
+      - {grade: B,       max_um: 19.0, score: 65, note: "Everyday quality; hard to distinguish from A by first touch."}
+      - {grade: C,       max_um: 30.0, score: 30, note: "Coarse; borderline/over the cashmere definition."}
+  staple_length:                       # fiber length in mm, longer = less pilling, more durable
+    zh_terms: [长绒]                    # "long fiber"
+    bands:
+      - {grade: A, min_mm: 36, score: 100, note: "Premium; strongly pill-resistant."}
+      - {grade: A_min, min_mm: 34, score: 90}
+      - {grade: B, min_mm: 28, score: 65}
+      - {grade: C, min_mm: 0,  score: 25, note: "<28mm; fibers migrate out and pill; degrades after ~15-20 wears."}
+  origin_hint:                         # coarse proxy when micron isn't listed
+    zh_terms: [内蒙古, 阿拉善, 鄂尔多斯羊绒]
+    bands:
+      - {origin: alashan_mongolian, typ_um: 15.0, score: 90, note: "Finest region (Alashan/Mongolian) ~15.0-15.5um."}
+      - {origin: inner_mongolia,    typ_um: 15.8, score: 80}
+      - {origin: unspecified,       typ_um: 17.0, score: 55}
+
+# ---------------------------------------------------------------------------
+# AXIS: construction  (ply, yarn count, gauge, GSM — WARMTH/WEIGHT, not fiber quality)
+# CRITICAL: ply is NOT a quality grade. 2-ply is not "better" than 1-ply; it is
+# heavier/warmer. Judge ply against the INTENDED weight tier, not as more=better.
+# ---------------------------------------------------------------------------
+construction:
+  ply:
+    zh_terms: [股]                      # 1股/2股/3股/4股 = 1/2/3/4-ply
+    note: "Number of yarn strands twisted together. Drives weight/warmth, not fiber grade."
+  yarn_count_nm:
+    zh_terms: [支数]                    # Nm metric count; e.g. 2/26NM = 2-ply, 26Nm
+    note: "Higher Nm = finer/lighter single. Fabric weight also depends on ply and gauge."
+  gauge:
+    zh_terms: [针]                      # 7针/9针/12针 = 7GG/9GG/12GG
+    note: "Stitches per inch; higher gauge = tighter, finer knit using more yarn."
+  gsm:
+    zh_terms: [克重, 高克重]            # 高克重 = high GSM / heavyweight (a quality-seeker keyword)
+    note: "Finished fabric weight. Match to the weight tier the buyer wants."
+
+# Weight tiers — align the Reddit guide's price tiers with real construction specs.
+weight_tiers:
+  - {name: base,   ply: "1 / light 2", gsm: "180-220", use: "everyday / layering"}
+  - {name: mid,    ply: "2 (dense)",   gsm: "260-320", use: "winter, holds structure"}
+  - {name: heavy,  ply: "3-4",         gsm: "350-450", use: "cold-weather, premium feel"}
+  # Source caveat: the "lightweight" GSM ceiling is disputed across sources (190 vs 280).
+
+# ---------------------------------------------------------------------------
+# AUTHENTICITY GATE rules (see quality-model.yaml)
+# ---------------------------------------------------------------------------
+authenticity:
+  hard_fail:                           # -> REJECT
+    - id: imitation
+      zh: 仿羊绒
+      meaning: "Imitation cashmere = acrylic. Not cashmere."
+    - id: not_pure_but_sold_as_pure
+      rule: "Title claims 纯羊绒 (100%) but composition shows <95% cashmere."
+    - id: below_fiber_floor
+      rule: "Price implies yarn cost below the raw-fiber floor."
+      floor_ref: price_floor
+  suspect:                             # -> VERIFY
+    - id: recycled
+      zh: 再生羊绒
+      meaning: "Recycled/regenerated cashmere. Ground-up fibers <35mm -> pills, weak. Usually 60-70% recycled + 30-40% virgin."
+    - id: blend_undisclosed
+      rule: "Composition not stated, or 羊绒 present with wool/nylon/viscose at unstated %."
+    - id: no_specs
+      rule: "Seller lists no micron/grade, ply, or origin (legit mills list these)."
+  price_floor:                         # sanity floor for real cashmere
+    raw_grade_a_usd_per_kg: [80, 150]
+    processed_yarn_usd_per_kg: [150, 300]
+    fake_signal_usd_per_kg: 30         # 'cashmere' priced like wool ($10-30/kg) is fake/heavily blended
+  buyer_side_tests:                    # for after arrival / detailed photos
+    - "Squiggle test: pinch fabric and wiggle — acrylic feels slippery/squiggles; real cashmere does not."
+    - "Burn test: real burns slow, smells of burnt hair, soft ash; fake melts, hardens, chemical smell."
+    - "Label: insist on '100% Cashmere'; treat vague 'cashmere blend' as blend."
+
+# ---------------------------------------------------------------------------
+# SPEC VOCABULARY the agent should extract from a listing (drives spec_transparency)
+# ---------------------------------------------------------------------------
+listing_specs:
+  fiber_pct:      {zh: [成分, 含绒量], required: true}
+  grade_or_micron: {zh: [等级, 微米], required: false}
+  ply:            {zh: [股], required: true}
+  yarn_count:     {zh: [支数], required: false}
+  gsm:            {zh: [克重], required: true}
+  yarn_source:    {zh: [纱线, 康赛妮], required: false, premium_yarns: [康赛妮, 鄂尔多斯, 鹿王]}

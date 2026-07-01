@@ -1,0 +1,75 @@
+# quality-model.yaml
+# The material-AGNOSTIC scoring framework the sourcing agent uses to judge and
+# rank any garment listing. Per-material thresholds live in data/materials/*.yaml.
+# This file defines HOW to score; the material files define WHAT the numbers mean.
+#
+# Pipeline: a listing is first run through the AUTHENTICITY GATE. If it hard-fails,
+# it is rejected outright (score = 0) regardless of anything else. If it passes or
+# is flagged "suspect", the four weighted axes produce a 0-100 quality score, which
+# maps to a tier and a buy/verify/skip decision.
+
+schema_version: 1
+
+# ---------------------------------------------------------------------------
+# AUTHENTICITY GATE (runs first — pass / suspect / fail)
+# ---------------------------------------------------------------------------
+authenticity_gate:
+  description: >
+    Hard integrity check. A listing that trips any `hard_fail` rule for its
+    material is REJECTED. A listing that trips a `suspect` rule (or omits the
+    specs needed to clear the gate) is routed to VERIFY, not auto-bought.
+  outcomes: [pass, suspect, fail]
+  fail_action: reject          # score forced to 0
+  suspect_action: verify       # surface to user with the reason, do not auto-buy
+
+# ---------------------------------------------------------------------------
+# SCORING AXES (only evaluated once the gate is pass/suspect)
+# Weights sum to 1.0. Each axis returns 0-100; final = weighted sum.
+# ---------------------------------------------------------------------------
+axes:
+  fiber_quality:
+    weight: 0.40
+    description: >
+      Intrinsic quality of the raw fiber — the single biggest driver of how a
+      garment feels, pills, and lasts. Material files define the metrics
+      (e.g. cashmere micron + staple length; cotton staple length; silk momme + variety).
+  construction:
+    weight: 0.25
+    description: >
+      How the fiber is turned into cloth — ply/gauge/knit density for knitwear,
+      weave + finishing (combed, mercerized) for wovens, weave + momme for silk.
+  spec_transparency:
+    weight: 0.20
+    description: >
+      Whether the seller publishes the technical specs a legitimate mill lists
+      (fiber %, micron/grade, ply, yarn count Nm, GSM, yarn source). Real Taobao/1688
+      sellers list these; their absence is itself a quality/authenticity signal.
+    scoring:
+      - {have: [fiber_pct, grade_or_micron, ply_or_weave, weight_gsm_or_momme, yarn_source], score: 100}
+      - {have_at_least: 3, score: 65}
+      - {have_at_least: 1, score: 30}
+      - {have: [], score: 0}   # no specs = treat as suspect at the gate too
+  value:
+    weight: 0.15
+    description: >
+      Quality-per-price. Compare the listing price against the material file's
+      expected price band for the tier the fiber+construction imply. Reward
+      at/below band; a price far BELOW the plausible fiber-cost floor is not a
+      bargain — it routes to the authenticity gate as `suspect`.
+
+# ---------------------------------------------------------------------------
+# SCORE -> TIER -> DECISION
+# ---------------------------------------------------------------------------
+tiers:
+  - {name: exceptional, min_score: 85, decision: buy}
+  - {name: strong,      min_score: 70, decision: buy}
+  - {name: acceptable,  min_score: 55, decision: buy_if_price_right}
+  - {name: weak,        min_score: 40, decision: skip}
+  - {name: poor,        min_score: 0,  decision: skip}
+
+decisions:
+  buy: "Meets the quality bar; recommend."
+  buy_if_price_right: "Fine only at/below expected price band; otherwise skip."
+  verify: "Specs incomplete or a suspect signal tripped — ask user / request more listing detail before buying."
+  skip: "Below the quality bar; do not recommend."
+  reject: "Failed the authenticity gate; likely mislabeled/adulterated."

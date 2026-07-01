@@ -1,0 +1,75 @@
+# silk.yaml — quality metrics, tiers, authenticity rules, and spec vocabulary
+# for silk garments. See knowledge/quality-rubric.md for citations.
+# The buyer's spec triad for silk: MOMME (weight/durability, objective) +
+# VARIETY (mulberry vs wild) + WEAVE (drape/use). Grade (6A) is a weak, gameable signal.
+
+material: silk
+also_known_as_zh: 真丝              # 真丝 = real/pure silk; 桑蚕丝 = mulberry silk
+
+# ---------------------------------------------------------------------------
+# AXIS: fiber_quality  (variety + momme are the objective levers; grade is soft)
+# ---------------------------------------------------------------------------
+fiber_quality:
+  variety:
+    zh_terms: [桑蚕丝, 柞蚕丝]         # 桑蚕丝 = mulberry (Bombyx mori), 柞蚕丝 = tussah/wild
+    bands:
+      - {type: mulberry, zh: 桑蚕丝, um: 8,  score: 100, note: "Cultivated Bombyx mori; ~8um, long continuous filament, strongest, white. Highest quality; use for anything on skin."}
+      - {type: tussah,   zh: 柞蚕丝, um: 70, score: 50,  note: "Wild; ~70um, coarse, shorter, beige, pills/weakens. OK for fillings/outerwear."}
+  momme:                               # objective weight/density unit; 1 momme = 4.34 g/m^2
+    zh_terms: [姆米, mm, M]            # often written 19mm / 22M (momme, NOT millimetres)
+    classes:
+      - {name: heavy,      min_mm: 28, score: 95, note: "Dense, opaque, most durable/luxurious."}
+      - {name: midweight,  min_mm: 20, score: 90, note: "20-28mm. 22mm = most popular; 25mm = premium sweet spot."}
+      - {name: light_mid,  min_mm: 16, score: 70, note: "16-19mm; 19mm loses smooth finish faster under friction."}
+      - {name: lightweight,min_mm: 0,  score: 45, note: "<16mm (chiffon/habotai territory); sheer, delicate."}
+    apparel_note: "Silk apparel/bedding mainstream is 19-25mm. Below 16mm is sheer/lining weight."
+  grade:                               # 6A/5A... — TREAT AS MARKETING, verify with test data
+    zh_terms: [6A, 5A, 等级]
+    note: >
+      GB/T 1797 grades raw silk 6A(top)..F. BUT grades apply only to raw silk before
+      weaving, are largely seller-declared, and unaudited: real 6A is <1% of production
+      yet >20% of products are labeled 6A. Give '6A' little weight without a test report.
+
+# ---------------------------------------------------------------------------
+# AXIS: construction  (weave sets drape/use; degummed vs raw sets luster)
+# ---------------------------------------------------------------------------
+construction:
+  weave:
+    zh_terms: [缎, 双绉, 电力纺]        # 缎/charmeuse, 双绉/crepe de chine, 电力纺/habotai
+    bands:
+      - {type: charmeuse,     zh: 桑波缎, momme: "12-30", score: 95, note: "Satin weave; glossy front/matte back; best drape+sheen. Gowns, lingerie, premium bedding."}
+      - {type: crepe_de_chine,zh: 双绉,   momme: "12-16", score: 80, note: "Pebbled texture, muted luster, wrinkle-resistant. Everyday blouses/dresses."}
+      - {type: habotai,       zh: 电力纺, momme: "5-16",  score: 65, note: "Plain, lightest, smooth both sides. Linings, scarves."}
+  finishing:
+    note: "Degummed silk (sericin removed) is lustrous/smooth; raw silk retains sericin -> dull, stiff, matte. Most smooth apparel silk is degummed (loses ~26% weight in degumming)."
+
+# ---------------------------------------------------------------------------
+# AUTHENTICITY GATE rules
+# ---------------------------------------------------------------------------
+authenticity:
+  hard_fail:
+    - id: not_real_silk
+      zh: 仿真丝                        # 仿真丝 = imitation silk (polyester)
+      meaning: "Imitation/faux silk = polyester. Not silk."
+    - id: blend_sold_as_pure
+      rule: "Claims 100% 真丝 but composition shows polyester/viscose above trace."
+  suspect:
+    - id: grade_without_test
+      rule: "Headline '6A' with no CMA/CNAS test report (6A is <1% of supply but on >20% of labels)."
+    - id: momme_missing
+      rule: "No momme (姆米) stated — the one objective silk spec is absent."
+    - id: cheap_high_momme
+      rule: "High momme + '6A' at a suspiciously low price -> likely faux or mislabeled."
+  buyer_side_tests:
+    - "Burn test: real silk smells of burnt hair, fine ash; polyester melts to a hard bead, chemical smell."
+    - "Sheen: real silk shows a warm, color-shifting luster; faux silk is a flat, white/mirror shine."
+
+# ---------------------------------------------------------------------------
+# SPEC VOCABULARY the agent extracts (drives spec_transparency)
+# ---------------------------------------------------------------------------
+listing_specs:
+  fiber_pct: {zh: [成分], required: true}
+  variety:   {zh: [桑蚕丝, 柞蚕丝], required: true}
+  momme:     {zh: [姆米, mm], required: true}
+  weave:     {zh: [缎, 双绉, 电力纺], required: false}
+  grade:     {zh: [6A, 5A], required: false, weight: low}

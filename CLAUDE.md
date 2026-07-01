@@ -33,6 +33,23 @@ High-level components. Names and boundaries are provisional.
 - **Model layer (OpenRouter)** — API-key config, model selection/routing, and prompt templates.
 - **Interface** — the agent's own UI and/or an open code entry point.
 
+## Quality Definition (the foundation)
+
+**Start here.** The operational definition of "best quality" — and the rules the agent uses to
+judge, score, and rank any listing — is the bedrock everything else depends on. Do not add search,
+ranking, or purchasing logic that bypasses it.
+
+- **`knowledge/quality-rubric.md`** — human-readable rationale + citations. Defines the pipeline:
+  an **authenticity gate** (hard-fail / verify) followed by four weighted axes
+  (fiber_quality 0.40, construction 0.25, spec_transparency 0.20, value 0.15) → 0–100 score →
+  buy/verify/skip. Core principle: *quality = fiber × honest construction × verified authenticity ÷ price* — buy the fiber the luxury houses buy, not the label.
+- **`data/quality-model.yaml`** — the machine-readable, material-agnostic scoring framework the
+  agent loads (axes, weights, tiers, decisions).
+- **`data/materials/*.yaml`** — per-material thresholds and Chinese spec vocabulary
+  (`cashmere.yaml`, `cotton.yaml`, `silk.yaml`). New materials drop in here without changing the model.
+
+When editing, keep the YAML and the markdown in sync — the YAML is what the agent consumes.
+
 ## Knowledge Source
 
 The seed guide is the r/stockholmreps post the user referenced. Reddit cannot be auto-fetched, so the post content was pasted in and structured into a machine-parseable repo doc:
@@ -59,6 +76,8 @@ Nothing is locked in yet.
 
 - [x] Scaffold `CLAUDE.md`
 - [x] Add the pasted Reddit guide as structured knowledge (`knowledge/sourcing-guide.md`)
+- [x] **Nail the quality definition & rules** — the rubric/scoring model the agent judges by
+      (`knowledge/quality-rubric.md`, `data/quality-model.yaml`, `data/materials/*.yaml`)
 - [ ] Decide the tech stack
 - [ ] Decide the purchasing / order-placement flow
 - [ ] Build the agent core

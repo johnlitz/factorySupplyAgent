@@ -2,6 +2,9 @@
 
 > Structured knowledge base for the sourcing agent. Source: r/stockholmreps guide (user-provided).
 > Machine-parseable: search terms, quality tiers, brands, and reference listings are kept as discrete fields.
+>
+> **This is the seed data (sellers, terms, price tiers). The agent judges quality using the
+> `knowledge/quality-rubric.md` framework and `data/materials/cashmere.yaml` — start there.**
 
 ## Premise
 
